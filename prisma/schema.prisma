@@ -8,8 +8,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url  	    = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 model Post {
@@ -22,6 +22,29 @@ model Post {
     createdById String
 
     @@index([name])
+}
+
+model Tweet {
+    id        String   @id @default(uuid())
+    userId    String
+    content   String
+    createdAt DateTime @default(now())
+
+    user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    likes Like[]
+
+    @@index([userId])
+}
+
+model Like {
+    userId  String
+    tweetId String
+    user    User   @relation(fields: [userId], references: [id])
+    Tweet   Tweet  @relation(fields: [tweetId], references: [id])
+
+    @@id([userId, tweetId])
+    @@index([userId])
+    @@index([tweetId])
 }
 
 // Necessary for Next auth
@@ -63,6 +86,12 @@ model User {
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
+
+    // Non-Next Auth
+    tweets    Tweet[]
+    likes     Like[]
+    followers User[]  @relation(name: "Followers")
+    follows   User[]  @relation(name: "Followers")
 }
 
 model VerificationToken {
